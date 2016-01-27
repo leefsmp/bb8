@@ -1,0 +1,30 @@
+{
+  "name": "BB8 + View & Data Integration Experiment",
+  "description": "Integrating BB8 bluetooth controlled droid with View & Data API",
+  "version": "1.0.0",
+  "dependencies": {
+    "cylon": "1.2.0",
+    "cylon-ble": "0.10.1",
+    "cylon-sphero": "^0.23.0",
+    "cylon-sphero-ble": "^0.11.0",
+    "express": ">= 4.12.3",
+    "noble": "^1.3.0",
+    "request": ">= 2.55.0",
+    "serve-favicon": ">= 2.2.0",
+    "sphero": "^0.7.0"
+  },
+  "engines": {
+    "node": ">= 0.10.0"
+  },
+  "contributors": [
+    "Philippe Leefsma <philippe.leefsma@autodesk.com>"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leefsmp/bb8"
+  }
+}
