@@ -36,7 +36,7 @@ var bb8Svc = new BB8Svc();
 // Socket connected
 //
 /////////////////////////////////////////////////////////////////////
-socket.on('connect', function() {
+socket.on('connect', ()=> {
 
   console.log('Local controller connected');
 });

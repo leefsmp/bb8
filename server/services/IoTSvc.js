@@ -15,7 +15,7 @@ class IoTSvc extends EventEmitter {
     this.handleConnection =
       this.handleConnection.bind(this);
 
-    this.io = io.listen(server);
+    this.io = io(server);
 
     this.io.sockets.on(
       'connection',

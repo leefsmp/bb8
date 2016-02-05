@@ -1,11 +1,12 @@
 
 module.exports = {
 
-  host: '/node/iot',
+  host: '',
   port: 3000,
 
   controller: {
-    host: 'http://localhost',
+    //host: 'http://localhost',
+    host: 'http://viewer.autodesk.io/node/iot',
     name: 'Local Controller:1'
   }
 }
