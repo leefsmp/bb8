@@ -163,7 +163,7 @@ Autodesk.ADN.Viewing.Extension.IoT = function (viewer, options) {
       
       '<div>',
         //'<input type="text" placeholder="Search">',
-        '<div class="IoT-panel-treeview">',
+        '<div class="IoT-panel-treeview-container">',
         '</div>',
       '</div>'
     ];
@@ -210,6 +210,12 @@ Autodesk.ADN.Viewing.Extension.IoT = function (viewer, options) {
             });
 
         }, function (err) {
+
+          $('.IoT-panel-treeview').remove();
+
+          $('.IoT-panel-treeview-container').append(
+            '<div class="IoT-panel-treeview"></div>'
+          );
 
           var tree = new InspireTree({
             target: '.IoT-panel-treeview',

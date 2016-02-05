@@ -141,11 +141,11 @@ Autodesk.ADN.Viewing.Extension.BB8 = function (viewer, options) {
           });
       },
 
-      setColor: function(color) {
+      blink: function(enabled, period, color) {
       
-        var url = options.apiUrl + '/bb8/color/' +
+        var url = options.apiUrl + '/bb8/blink/' +
           controllerId + '/' + deviceId + '/' +
-          color;
+          enabled + '/' + period + '/' + color;
       
         return new Promise(
           function (resolve, reject) {
@@ -309,80 +309,6 @@ Autodesk.ADN.Viewing.Extension.BB8 = function (viewer, options) {
     //
     //
     /////////////////////////////////////////////////////////////
-    function Blinker(period, color) {
-
-      var _blinker = this;
-
-      _blinker.color = color;
-
-      _blinker.intervalId = 0;
-
-      _blinker.enabled = false;
-
-      _blinker.period = period;
-
-      function blink(color) {
-
-        BB8API.setColor(color);
-
-        setTimeout(function() {
-          BB8API.setColor('0')
-        }, 50);
-      }
-
-      function run() {
-
-        clearInterval(_blinker.intervalId);
-
-        if(_blinker.enabled) {
-
-          if(_blinker.period > 0) {
-
-            _blinker.intervalId = setInterval(
-              function () {
-                blink(_blinker.color);
-              }, _blinker.period);
-          }
-          else {
-
-            BB8API.setColor(_blinker.color);
-          }
-        }
-        else {
-
-          BB8API.setColor('0');
-        }
-      }
-
-      _blinker.enable = function(enabled){
-
-        _blinker.enabled = enabled;
-
-        run();
-      }
-
-      _blinker.setPeriod = function(t) {
-
-        _blinker.period = t;
-
-        run();
-      }
-
-      _blinker.setColor = function(color){
-
-        _blinker.color = color;
-
-        if(_blinker.period == 0 && _blinker.enabled) {
-
-          BB8API.setColor(_blinker.color);
-        }
-      }
-    }
-
-    /////////////////////////////////////////////////////////////
-    //
-    //
-    /////////////////////////////////////////////////////////////
     function createControls() {
 
       var joystick = new Joystick({
@@ -432,12 +358,19 @@ Autodesk.ADN.Viewing.Extension.BB8 = function (viewer, options) {
         BB8API.setHeading(this.value);
       });
 
-      var blinker = new Blinker(0, 'FF');
+      var blinkEnabled = false;
+      var blinkPeriod = 0;
+      var blinkColor = 'FF';
 
       createSwitchButton('#onoffswitch-' + id, false,
         function(checked){
 
-          blinker.enable(checked);
+          blinkEnabled = checked;
+
+          BB8API.blink(
+            blinkEnabled,
+            blinkPeriod,
+            blinkColor);
         });
 
       $("#spectrum-" + id).spectrum({
@@ -452,13 +385,23 @@ Autodesk.ADN.Viewing.Extension.BB8 = function (viewer, options) {
             '}' +
           '</style>').appendTo('head');
 
-          blinker.setColor(lightColor.replace('#', ''));
+          blinkColor = lightColor.replace('#', '');
+
+          BB8API.blink(
+            blinkEnabled,
+            blinkPeriod,
+            blinkColor);
         }
       });
 
       $('#light-range-' + id).change(function(){
 
-        blinker.setPeriod(this.value);
+        blinkPeriod = parseInt(this.value);
+
+        BB8API.blink(
+          blinkEnabled,
+          blinkPeriod,
+          blinkColor);
       });
     }
 

@@ -20,7 +20,7 @@ import noble from 'noble';
 import sphero from 'sphero';
 import EventEmitter from 'events';
 
-class BB8Svc extends EventEmitter {
+export default class BB8Svc extends EventEmitter {
 
   ///////////////////////////////////////////////////////////////////
   //
@@ -49,11 +49,14 @@ class BB8Svc extends EventEmitter {
 
       if(name && name.startsWith('BB-')) {
 
+        var blinker = new Blinker(_thisSvc, deviceId);
+
         var device = {
           deviceId: deviceId,
           connected: false,
           address: address,
-          name: name
+          name: name,
+          blinker: blinker
         };
 
         _thisSvc.emit('DEVICE_DETECTED', device);
@@ -310,6 +313,115 @@ class BB8Svc extends EventEmitter {
     return promise;
   }
 
+  ///////////////////////////////////////////////////////////////////
+  // Blink LED
+  //
+  ///////////////////////////////////////////////////////////////////
+  blink(deviceId, enabled, period, color) {
+
+    var _thisSvc = this;
+
+    var promise = new Promise((resolve, reject)=> {
+
+      try {
+
+        var device = _thisSvc.getDeviceById(deviceId);
+
+        if (!device) {
+
+          return reject('Invalid deviceId');
+        }
+
+        device.blinker.setPeriod(period);
+        device.blinker.setColor(color);
+        device.blinker.enable(enabled);
+
+        resolve('done');
+      }
+      catch (ex) {
+
+        return reject(ex);
+      }
+    });
+
+    return promise;
+  }
 }
 
-export default BB8Svc;
+///////////////////////////////////////////////////////////////////
+// Utility to blink the LED
+//
+///////////////////////////////////////////////////////////////////
+function Blinker(bb8Svc, deviceId) {
+
+  var _blinker = this;
+
+  _blinker.color = 0;
+
+  _blinker.intervalId = 0;
+
+  _blinker.enabled = false;
+
+  _blinker.period = 0;
+
+  function blink(color) {
+
+    bb8Svc.color(deviceId, color);
+
+    setTimeout(function() {
+      bb8Svc.color(deviceId, 0);
+    }, 50);
+  }
+
+  function run() {
+
+    clearInterval(_blinker.intervalId);
+
+    if(_blinker.enabled) {
+
+      if(_blinker.period > 0) {
+
+        _blinker.intervalId = setInterval(
+          function () {
+            blink(_blinker.color);
+          }, _blinker.period);
+      }
+      else {
+
+        bb8Svc.color(
+          deviceId,
+          _blinker.color);
+      }
+    }
+    else {
+
+      bb8Svc.color(deviceId, 0);
+    }
+  }
+
+  _blinker.enable = function(enabled){
+
+    _blinker.enabled = enabled;
+
+    run();
+  }
+
+  _blinker.setPeriod = function(t) {
+
+    _blinker.period = t;
+
+    run();
+  }
+
+  _blinker.setColor = function(color){
+
+    _blinker.color = color;
+
+    if(_blinker.period == 0 && _blinker.enabled) {
+
+      bb8Svc.color(
+        deviceId,
+        _blinker.color);
+    }
+  }
+}

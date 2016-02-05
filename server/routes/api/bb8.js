@@ -76,23 +76,25 @@ function BB8API(IoTSvc) {
     });
 
   ///////////////////////////////////////////////////////////////////
-  // Sets LED color (0 turns off the LED)
+  // Sets LED blinking period and color
   //
   ///////////////////////////////////////////////////////////////////
-  router.get('/color/:controllerId/:deviceId/:hexStr',
+  router.get('/blink/:controllerId/:deviceId/:enabled/:period/:color',
 
     async(req, res)=> {
 
-      var hexStr = req.params.hexStr;
+      var enabled = req.params.enabled;
+      var period = req.params.period;
+      var color = req.params.color;
       var deviceId = req.params.deviceId;
       var controllerId = req.params.controllerId;
 
-      var color = parseInt("0x" + hexStr);
-
       IoTSvc.sendCommand(controllerId, {
         deviceId: deviceId,
-        cmdId: 'COLOR',
+        cmdId: 'BLINK',
         args:{
+          enabled: enabled,
+          period: period,
           color: color
         }
       });

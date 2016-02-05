@@ -116,7 +116,8 @@ socket.on('IOT_COMMAND', async(cmd) => {
 
       case 'ROLL':
 
-        await bb8Svc.roll(cmd.deviceId,
+        await bb8Svc.roll(
+          cmd.deviceId,
           cmd.args.speed,
           cmd.args.heading);
 
@@ -124,15 +125,19 @@ socket.on('IOT_COMMAND', async(cmd) => {
 
       case 'HEADING':
 
-        await bb8Svc.setHeading(cmd.deviceId,
+        await bb8Svc.setHeading(
+          cmd.deviceId,
           cmd.args.heading);
 
         break;
 
-      case 'COLOR':
+      case 'BLINK':
 
-        await bb8Svc.color(cmd.deviceId,
-          cmd.args.color);
+        await bb8Svc.blink(
+          cmd.deviceId,
+          (cmd.args.enabled == 'true' ? true : false),
+          parseInt(cmd.args.period),
+          parseInt("0x" + cmd.args.color));
 
         break;
     }
