@@ -1,4 +1,3 @@
-
 # Sphero BB8 / View & Data API integration Sample
 
 
@@ -7,12 +6,18 @@ An integration experiment between [Sphero BB8 Droid](http://store.sphero.com/pro
 
 ## Setup/Usage Instructions
 
-* npm install
-* npm install cylon-ble -g
-* cylon-ble-scan to find your BB8 device UUID
-* Replace hardcoded _deviceUUID value in Autodesk.ADN.Viewing.Extension.BB8.js
-* Connect to: [http://localhost:3000/](http://localhost:3000/)
-* Control your droid from the webpage controls
+* Install dependencies
+		npm install
+* Run the server locally
+		npm run start
+* Run the controller locally
+		npm run controller
+* Have the device at promity of the computer running the controller    
+* Connect to 
+[http://localhost:3000/node/iot/](http://localhost:3000/node/iot)
+* Display IoT Control Panel from viewer toolbar icon
+* Double click on the device from the treeview
+* Control the device from the webpage
 
 ## License
 

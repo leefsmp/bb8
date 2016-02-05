@@ -1,0 +1,17 @@
+
+.inspire-tree a {
+    cursor: default;
+    display: block;
+    height: 25px;
+    line-height: 25px;
+    color: cyan;
+}
+
+.inspire-tree a:hover {
+    color: black;
+}
+
+.inspire-tree .focused > div > a,
+.inspire-tree .selected > div > a {
+    color: black;
+}
