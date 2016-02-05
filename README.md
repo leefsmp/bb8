@@ -14,10 +14,15 @@ An integration experiment between [Sphero BB8 Droid](http://store.sphero.com/pro
 		npm run controller
 * Have the device at promity of the computer running the controller    
 * Connect to 
-[http://localhost:3000/node/iot/](http://localhost:3000/node/iot)
+[http://localhost:3000](http://localhost:3000)
 * Display IoT Control Panel from viewer toolbar icon
 * Double click on the device from the treeview
 * Control the device from the webpage
+
+## Live Demo
+
+[https://iotea.herokuapp.com](https://iotea.herokuapp.com)
+	
 
 ## License
 
