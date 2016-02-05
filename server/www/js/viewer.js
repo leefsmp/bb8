@@ -42,7 +42,7 @@ function onLoad() {
     viewer.load('/data/bb8/bb8.svf');
 
     viewer.loadExtension('Autodesk.ADN.Viewing.Extension.IoT', {
-      apiUrl: '/node/iot/api'
+      apiUrl: '/api'
     });
   });
 }

@@ -2,11 +2,11 @@
 module.exports = {
 
   host: '',
-  port: 3000,
+  port: 443,
 
   controller: {
     //host: 'http://localhost',
-    host: 'http://viewer.autodesk.io/node/iot',
+    host: 'https://iotea.herokuapp.com',
     name: 'Local Controller:1'
   }
 }
