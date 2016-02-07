@@ -20,7 +20,7 @@ import noble from 'noble';
 import BB8Svc from './services/bb8Svc';
 import ioClient from 'socket.io-client';
 import shutdown from 'shutdown-handler';
-import config from '../config/dev.config';
+import config from '../config/prod.config';
 
 /////////////////////////////////////////////////////////////////////
 // Initialization

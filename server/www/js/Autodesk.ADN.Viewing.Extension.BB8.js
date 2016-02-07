@@ -230,20 +230,20 @@ Autodesk.ADN.Viewing.Extension.BB8 = function (viewer, options) {
 
       '<div class="bb8-panel-controls">',
 
-        '<span class="speed-label"> Speed: </span>',
+        '<span class="speed-label">Speed:</span>',
         '<input class="speed-control" id="speed-range-' + id + '" ',
           'type ="range" min ="1" max="2000" step ="10" value="1">',
 
         '<hr class="spacer">',
 
-        '<span class="heading-label"> Heading: </span>',
+        '<span class="heading-label">Heading:</span>',
         '<input class="heading-control" id="heading-range-' + id + '" ',
           'type ="range" min ="0" max="359" step ="1" value="0">',
 
         '<hr class="spacer">',
 
         '<div class="bb8-panel-light-controls">',
-          '<span class="light-label"> Light: </span>',
+          '<span class="light-label">Light:</span>',
           '<div id="onoffswitch-' + id + '" class="onoffswitch-container">',
           '</div>',
           '<input type="text" id="spectrum-' + id + '"/>',
@@ -255,6 +255,7 @@ Autodesk.ADN.Viewing.Extension.BB8 = function (viewer, options) {
         '<hr class="spacer">',
 
         '<div class="bb8-panel-path-controls">',
+        '<div>Path:</div>',
           '<button class="btn btn-info bb8-panel-btn-path fa fa-square-o" id="' + id + '-square-path-btn">',
           '<button class="btn btn-info bb8-panel-btn-path fa fa-circle-o" id="' + id + '-circle-path-btn">',
         '</div>',
@@ -535,8 +536,8 @@ Autodesk.ADN.Viewing.Extension.BB8 = function (viewer, options) {
     'div.bb8-panel {',
       'top: 0px;',
       'right: 0px;',
-      'width: 275px;',
-      'height: 410px;',
+      'width: 245px;',
+      'height: 415px;',
       'resize: auto;',
     '}',
 
@@ -566,7 +567,7 @@ Autodesk.ADN.Viewing.Extension.BB8 = function (viewer, options) {
     '.speed-label {',
       'float: left;',
       'color: whitesmoke;',
-      'margin-left: 16px;',
+      'margin-left: 10px;',
     '}',
 
     '.speed-control{',
@@ -575,7 +576,7 @@ Autodesk.ADN.Viewing.Extension.BB8 = function (viewer, options) {
 
     '.heading-label {',
       'float: left;',
-      'margin-left: 4px;',
+      'margin-left: 10px;',
       'color: whitesmoke;',
     '}',
 
@@ -600,11 +601,13 @@ Autodesk.ADN.Viewing.Extension.BB8 = function (viewer, options) {
     '}',
 
     '.bb8-panel-path-controls {',
-      'margin-top: 20px;',
+      'margin-top: 10px;',
+      'color: white;',
     '}',
 
     '.bb8-panel-btn-path {',
       'margin-right: 10px;',
+      'margin-top: 5px;',
     '}'
 
   ].join('\n');

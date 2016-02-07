@@ -19,7 +19,7 @@ import express from 'express';
 import IoTAPI from './routes/api/IoT';
 import bb8API from './routes/api/bb8';
 import IoTSvc from './services/IoTSvc';
-import config from '../config/dev.config';
+import config from '../config/prod.config';
 
 var app = express();
 
