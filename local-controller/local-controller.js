@@ -17,9 +17,10 @@
 /////////////////////////////////////////////////////////////////////
 
 import noble from 'noble';
-import ioClient from 'socket.io-client';
-import config from '../config/config';
 import BB8Svc from './services/bb8Svc';
+import ioClient from 'socket.io-client';
+import shutdown from 'shutdown-handler';
+import config from '../config/dev.config';
 
 /////////////////////////////////////////////////////////////////////
 // Initialization
@@ -38,7 +39,13 @@ var bb8Svc = new BB8Svc();
 /////////////////////////////////////////////////////////////////////
 socket.on('connect', ()=> {
 
-  console.log('Local controller connected');
+  console.log('Local controller connected: ' +
+    config.controller.name);
+
+  shutdown.on('exit', async()=> {
+
+    await bb8Svc.shutdown();
+  });
 });
 
 /////////////////////////////////////////////////////////////////////
@@ -138,6 +145,37 @@ socket.on('IOT_COMMAND', async(cmd) => {
           (cmd.args.enabled == 'true' ? true : false),
           parseInt(cmd.args.period),
           parseInt("0x" + cmd.args.color));
+
+        break;
+
+      case 'PATH':
+
+        var pathFn = null;
+
+        switch(cmd.args.type) {
+
+          case 'square':
+
+            pathFn = bb8Svc.createSquarePathFn(
+              cmd.args.length,
+              cmd.args.speed);
+
+            break;
+        }
+
+        if(pathFn){
+
+          await bb8Svc.startPath(
+            cmd.deviceId,
+            pathFn,
+            cmd.args.speed,
+            250);
+        }
+        else {
+
+        await bb8Svc.stopPath(
+          cmd.deviceId);
+        }
 
         break;
     }

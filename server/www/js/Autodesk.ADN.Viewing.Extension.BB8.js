@@ -48,13 +48,14 @@ Autodesk.ADN.Viewing.Extension.BB8 = function (viewer, options) {
   //  connect bb8 device
   //
   /////////////////////////////////////////////////////////////////
-  this.connect = function(controllerId, deviceId) {
+  this.connect = function(controllerId, deviceId, name) {
 
     var panel = new BB8ControlPanel(
       viewer.container,
       guid(),
       controllerId,
-      deviceId);
+      deviceId,
+      name);
 
     panel.connect();
   }
@@ -120,7 +121,8 @@ Autodesk.ADN.Viewing.Extension.BB8 = function (viewer, options) {
     parentContainer, 
     id, 
     controllerId, 
-    deviceId) {
+    deviceId,
+    deviceName) {
   
     /////////////////////////////////////////////////////////////////
     // BB8 API
@@ -181,6 +183,20 @@ Autodesk.ADN.Viewing.Extension.BB8 = function (viewer, options) {
               resolve(response);
             });
           });
+      },
+
+      path: function(speed, type) {
+
+        var url = options.apiUrl + '/bb8/path/' +
+          controllerId + '/' + deviceId + '/' +
+          speed + '/' + type;
+
+        return new Promise(
+          function (resolve, reject) {
+            $.get(url, function (response) {
+              resolve(response);
+            });
+          });
       }
     }
   
@@ -196,7 +212,7 @@ Autodesk.ADN.Viewing.Extension.BB8 = function (viewer, options) {
       this,
       parentContainer,
       id,
-      'BB8 Controller',
+      'Device: ' + deviceName,
       {shadow:true});
 
     $(_thisPanel.container).addClass('bb8-panel');
@@ -206,35 +222,77 @@ Autodesk.ADN.Viewing.Extension.BB8 = function (viewer, options) {
     //
     /////////////////////////////////////////////////////////////
     var html = [
+
       '<div class="joystick-container" id="joystick-' + id + '">',
       '</div>',
 
       '<hr class="spacer">',
 
-      '<span class="speed-label"> Speed: </span>',
-      '<input class="speed-control" id="speed-range-' + id + '" ',
-        'type ="range" min ="1" max="2000" step ="10" value="1">',
+      '<div class="bb8-panel-controls">',
 
-      '<hr class="spacer">',
+        '<span class="speed-label"> Speed: </span>',
+        '<input class="speed-control" id="speed-range-' + id + '" ',
+          'type ="range" min ="1" max="2000" step ="10" value="1">',
 
-      '<span class="heading-label"> Heading: </span>',
-      '<input class="heading-control" id="heading-range-' + id + '" ',
-        'type ="range" min ="0" max="359" step ="1" value="0">',
-
-      '<hr class="spacer">',
-
-      '<div class="bb8-panel-light-controls">',
-        '<span class="light-label"> Light: </span>',
-        '<div id="onoffswitch-' + id + '" class="onoffswitch-container">',
-        '</div>',
-        '<input type="text" id="spectrum-' + id + '"/>',
         '<hr class="spacer">',
-        '<input class="light-control" id="light-range-' + id + '" ',
-          'type ="range" min ="0" max="3000" step ="100" value="0">',
+
+        '<span class="heading-label"> Heading: </span>',
+        '<input class="heading-control" id="heading-range-' + id + '" ',
+          'type ="range" min ="0" max="359" step ="1" value="0">',
+
+        '<hr class="spacer">',
+
+        '<div class="bb8-panel-light-controls">',
+          '<span class="light-label"> Light: </span>',
+          '<div id="onoffswitch-' + id + '" class="onoffswitch-container">',
+          '</div>',
+          '<input type="text" id="spectrum-' + id + '"/>',
+          '<hr class="spacer">',
+          '<input class="light-control" id="light-range-' + id + '" ',
+            'type ="range" min ="0" max="3000" step ="100" value="0">',
+        '</div>',
+
+        '<hr class="spacer">',
+
+        '<div class="bb8-panel-path-controls">',
+          '<button class="btn btn-info bb8-panel-btn-path fa fa-square-o" id="' + id + '-square-path-btn">',
+          '<button class="btn btn-info bb8-panel-btn-path fa fa-circle-o" id="' + id + '-circle-path-btn">',
+        '</div>',
+
       '</div>'
-      ];
+    ];
 
     $(_thisPanel.container).append(html.join('\n'));
+
+    var pathRunning = false;
+
+    $('#' + id + '-square-path-btn').click(function(){
+
+      pathRunning = !pathRunning;
+
+      if(!pathRunning) {
+
+        BB8API.path(0, 'stop');
+        return;
+      }
+
+      var speedFactor = document.getElementById(
+        'speed-range-' + id).value;
+
+      var speed = speedFactor * 0.01;
+
+      BB8API.path(speed, 'square');
+    });
+
+    $('#' + id + '-circle-path-btn').click(function(){
+
+      var speedFactor = document.getElementById(
+        'speed-range-' + id).value;
+
+      var speed = speedFactor * 0.01;
+
+      BB8API.path(speed, 'circle');
+    });
 
     /////////////////////////////////////////////////////////////
     //
@@ -477,9 +535,13 @@ Autodesk.ADN.Viewing.Extension.BB8 = function (viewer, options) {
     'div.bb8-panel {',
       'top: 0px;',
       'right: 0px;',
-      'width: 250px;',
-      'height: 350px;',
+      'width: 275px;',
+      'height: 410px;',
       'resize: auto;',
+    '}',
+
+    '.bb8-panel-controls {',
+      'margin: 10px;',
     '}',
 
     'div.bb8-panel-minimized {',
@@ -492,8 +554,8 @@ Autodesk.ADN.Viewing.Extension.BB8 = function (viewer, options) {
     '}',
 
     'div.bb8-panel-light-controls {',
-      'margin-left: 26px;',
-      'margin-right: 42px;',
+      'margin-left: 20px;',
+      'margin-right: 20px;',
     '}',
 
     '.onoffswitch-container {',
@@ -534,8 +596,16 @@ Autodesk.ADN.Viewing.Extension.BB8 = function (viewer, options) {
 
     'hr.spacer{',
       'border-width: 0px;',
-      'margin: 10px;',
+      'margin: 5px;',
     '}',
+
+    '.bb8-panel-path-controls {',
+      'margin-top: 20px;',
+    '}',
+
+    '.bb8-panel-btn-path {',
+      'margin-right: 10px;',
+    '}'
 
   ].join('\n');
 

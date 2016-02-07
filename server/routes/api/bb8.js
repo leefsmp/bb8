@@ -125,6 +125,32 @@ function BB8API(IoTSvc) {
       res.json('done');
     });
 
+  ///////////////////////////////////////////////////////////////////
+  // Send path command
+  //
+  ///////////////////////////////////////////////////////////////////
+  router.get('/path/:controllerId/:deviceId/:speed/:type',
+
+    async(req, res)=> {
+
+    var type = req.params.type;
+    var speed = req.params.speed;
+    var deviceId = req.params.deviceId;
+    var controllerId = req.params.controllerId;
+
+    IoTSvc.sendCommand(controllerId, {
+      deviceId: deviceId,
+      cmdId: 'PATH',
+      args:{
+        speed: speed,
+        type: type,
+        length: 3
+      }
+    });
+
+    res.json('done');
+  });
+
   return router;
 }
 

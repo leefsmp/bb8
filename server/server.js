@@ -16,10 +16,10 @@
 // UNINTERRUPTED OR ERROR FREE.
 /////////////////////////////////////////////////////////////////////
 import express from 'express';
-import config from '../config/config';
-import IoTSvc from './services/IoTSvc';
 import IoTAPI from './routes/api/IoT';
 import bb8API from './routes/api/bb8';
+import IoTSvc from './services/IoTSvc';
+import config from '../config/dev.config';
 
 var app = express();
 

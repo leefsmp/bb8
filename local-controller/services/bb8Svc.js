@@ -56,7 +56,8 @@ export default class BB8Svc extends EventEmitter {
           connected: false,
           address: address,
           name: name,
-          blinker: blinker
+          blinker: blinker,
+          pathId: null
         };
 
         _thisSvc.emit('DEVICE_DETECTED', device);
@@ -208,6 +209,77 @@ export default class BB8Svc extends EventEmitter {
   }
 
   ///////////////////////////////////////////////////////////////////
+  // Disconnects specific device
+  //
+  ///////////////////////////////////////////////////////////////////
+  disconnect(deviceId) {
+
+    var _thisSvc = this;
+
+    var promise = new Promise((resolve, reject)=> {
+
+      try {
+
+        if (!_thisSvc.detectedDevices[deviceId]) {
+
+          reject('Invalid device id');
+        }
+
+        var device = _thisSvc.detectedDevices[deviceId];
+
+        if (device.connected && device.driver !== null) {
+
+          device.driver.disconnect(()=> {
+
+            _thisSvc.detectedDevices[deviceId].connected = false;
+            _thisSvc.detectedDevices[deviceId].driver = null;
+
+            return resolve('device disconnected');
+          });
+        }
+        else {
+
+          return resolve('device not connected');
+        }
+      }
+      catch (ex) {
+
+        reject(ex);
+      }
+    });
+
+    return promise;
+  }
+
+  ///////////////////////////////////////////////////////////////////
+  // Shutdown controller: disconnect all devices
+  //
+  ///////////////////////////////////////////////////////////////////
+  shutdown() {
+
+    var _thisSvc = this;
+
+    var promise = new Promise(async(resolve, reject)=> {
+
+      try {
+
+        for(var deviceId in _thisSvc.detectedDevices) {
+
+          await _thisSvc.disconnect();
+
+          return resolve('ALL devices disconnected');
+        }
+      }
+      catch (ex) {
+
+        reject(ex);
+      }
+    });
+
+    return promise;
+  }
+
+  ///////////////////////////////////////////////////////////////////
   // Roll device
   //
   ///////////////////////////////////////////////////////////////////
@@ -346,6 +418,132 @@ export default class BB8Svc extends EventEmitter {
 
     return promise;
   }
+
+  ///////////////////////////////////////////////////////////////////
+  //
+  //
+  ///////////////////////////////////////////////////////////////////
+  startPath(deviceId, pathFunc, speed, freq) {
+
+    var _thisSvc = this;
+
+    var promise = new Promise((resolve, reject)=> {
+
+      try {
+
+        var device = _thisSvc.getDeviceById(deviceId);
+
+        if (!device) {
+
+          return reject('Invalid deviceId');
+        }
+
+        var pathId = guid();
+
+        _thisSvc.detectedDevices[deviceId].pathId = pathId;
+
+        var hiTimer = new HiTimer();
+
+        function step() {
+
+          if(_thisSvc.detectedDevices[deviceId].pathId != pathId) {
+
+            device.driver.roll(0, 0);
+            return;
+          }
+
+          var heading = pathFunc(
+            hiTimer.getElapsedMs() * 0.001);
+
+          device.driver.roll(speed, heading);
+
+          setTimeout(step, freq);
+        }
+
+        step();
+
+        resolve('done');
+      }
+      catch (ex) {
+
+        return reject(ex);
+      }
+    });
+
+    return promise;
+  }
+
+  ///////////////////////////////////////////////////////////////////
+  //
+  //
+  ///////////////////////////////////////////////////////////////////
+  stopPath(deviceId) {
+
+    var _thisSvc = this;
+
+    var promise = new Promise((resolve, reject)=> {
+
+      try {
+
+        var device = _thisSvc.getDeviceById(deviceId);
+
+        if (!device) {
+
+          return reject('Invalid deviceId');
+        }
+
+        device.pathId = 0;
+
+        resolve('done');
+      }
+      catch (ex) {
+
+        return reject(ex);
+      }
+    });
+
+    return promise;
+  }
+
+  ///////////////////////////////////////////////////////////////////
+  //
+  //
+  ///////////////////////////////////////////////////////////////////
+  createSquarePathFn(lentgh, speed) {
+
+    var squarePathFn = function(t) {
+
+      var state = (Math.floor(speed * 0.1 * t/lentgh) % 4);
+
+      return state * 90;
+    }
+
+    return squarePathFn;
+  }
+}
+
+///////////////////////////////////////////////////////////////////
+// Hi Precision timer for node.js
+//
+///////////////////////////////////////////////////////////////////
+class HiTimer {
+
+  constructor() {
+
+    this._hrstart = process.hrtime();
+  }
+
+  reset() {
+
+    this._hrstart = process.hrtime();
+  }
+
+  getElapsedMs() {
+
+    var hrend = process.hrtime(this._hrstart);
+
+    return hrend[0] * 1000 + hrend[1]/1000000;
+  }
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -424,4 +622,30 @@ function Blinker(bb8Svc, deviceId) {
         _blinker.color);
     }
   }
+}
+
+///////////////////////////////////////////////////////////////////
+// Utility to generate random unique guid's
+//
+///////////////////////////////////////////////////////////////////
+function guid(size) {
+
+  size = size || 14;
+
+  var pattern = '';
+
+  for(var i=1; i <= size; ++i)
+    pattern += (i%5 ? 'x' : '-');
+
+  var d = new Date().getTime();
+
+  var guid = pattern.replace(
+    /[xy]/g,
+    function (c) {
+      var r = (d + Math.random() * 16) % 16 | 0;
+      d = Math.floor(d / 16);
+      return (c == 'x' ? r : (r & 0x7 | 0x8)).toString(16);
+    });
+
+  return guid;
 }

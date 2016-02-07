@@ -211,8 +211,6 @@ Autodesk.ADN.Viewing.Extension.IoT = function (viewer, options) {
 
         }, function (err) {
 
-          $('.IoT-panel-treeview').remove();
-
           $('.IoT-panel-treeview-container').append(
             '<div class="IoT-panel-treeview"></div>'
           );
@@ -233,7 +231,8 @@ Autodesk.ADN.Viewing.Extension.IoT = function (viewer, options) {
 
               _bb8Extension.connect(
                 node.controllerId,
-                node.deviceId);
+                node.deviceId,
+                node.name);
             }
           });
         });
@@ -249,9 +248,13 @@ Autodesk.ADN.Viewing.Extension.IoT = function (viewer, options) {
       Autodesk.Viewing.UI.DockingPanel.prototype.
         setVisible.call(this, show);
 
-      if(show){
+      if(show) {
 
         loadTree();
+      }
+      else {
+
+        $('.IoT-panel-treeview').remove();
       }
     }
     
