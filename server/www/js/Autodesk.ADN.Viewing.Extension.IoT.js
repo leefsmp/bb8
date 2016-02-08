@@ -190,6 +190,8 @@ Autodesk.ADN.Viewing.Extension.IoT = function (viewer, options) {
             children: []
           };
 
+          data.push(controllerNode);
+
           IoTAPI.getDevices(controller.controllerId).then(
             function (devices) {
 
@@ -205,7 +207,6 @@ Autodesk.ADN.Viewing.Extension.IoT = function (viewer, options) {
                 });
               });
 
-              data.push(controllerNode);
               callback();
             });
 
