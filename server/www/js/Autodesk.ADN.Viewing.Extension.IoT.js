@@ -59,16 +59,17 @@ Autodesk.ADN.Viewing.Extension.IoT = function (viewer, options) {
     _bb8Extension = viewer.getExtension(
       'Autodesk.ADN.Viewing.Extension.BB8');
 
-    _panel = new Panel(
-      viewer.container,
-      guid());
-
-    var button = createButton("IoT",
+    var button = createButton("IoTBtn",
       "fa fa-cogs",
       "IoT Control Panel", function(){
 
-        _panel.setVisible(true);
+        _panel.toggleVisibility();
       });
+
+    _panel = new Panel(
+      viewer.container,
+      guid(),
+      button.container);
 
     var viewerToolbar = viewer.getToolbar(true);
 
@@ -140,9 +141,11 @@ Autodesk.ADN.Viewing.Extension.IoT = function (viewer, options) {
   //
   /////////////////////////////////////////////////////////////////
   var Panel = function(
-    parentContainer, id) {
+    parentContainer, id, button) {
     
     var _thisPanel = this;
+
+    _thisPanel.isVisible = false;
     
     _thisPanel.content = document.createElement('div');
     
@@ -150,7 +153,7 @@ Autodesk.ADN.Viewing.Extension.IoT = function (viewer, options) {
       this,
       parentContainer,
       id,
-      'Docking Panel Demo',
+      'IoT Connected Controllers',
       {shadow:true});
     
     $(_thisPanel.container).addClass('IoT-panel');
@@ -245,7 +248,9 @@ Autodesk.ADN.Viewing.Extension.IoT = function (viewer, options) {
     //
     /////////////////////////////////////////////////////////////
     _thisPanel.setVisible = function(show) {
-      
+
+      _thisPanel.isVisible = show;
+
       Autodesk.Viewing.UI.DockingPanel.prototype.
         setVisible.call(this, show);
 
@@ -257,8 +262,20 @@ Autodesk.ADN.Viewing.Extension.IoT = function (viewer, options) {
 
         $('.IoT-panel-treeview').remove();
       }
+
+      button.classList.toggle('active');
     }
-    
+
+    /////////////////////////////////////////////////////////////
+    //
+    //
+    /////////////////////////////////////////////////////////////
+    _thisPanel.toggleVisibility = function() {
+
+      _panel.setVisible(!_thisPanel.isVisible);
+    }
+
+
     /////////////////////////////////////////////////////////////
     // initialize override
     //
