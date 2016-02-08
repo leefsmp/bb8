@@ -144,7 +144,7 @@ function BB8API(IoTSvc) {
       args:{
         speed: speed,
         type: type,
-        length: 2.5
+        length: 5
       }
     });
 

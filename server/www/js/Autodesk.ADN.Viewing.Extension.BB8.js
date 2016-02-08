@@ -280,7 +280,7 @@ Autodesk.ADN.Viewing.Extension.BB8 = function (viewer, options) {
       var speedFactor = document.getElementById(
         'speed-range-' + id).value;
 
-      var speed = speedFactor * 0.01;
+      var speed = speedFactor * 0.1;
 
       BB8API.path(speed, 'square');
     });
@@ -290,7 +290,7 @@ Autodesk.ADN.Viewing.Extension.BB8 = function (viewer, options) {
       var speedFactor = document.getElementById(
         'speed-range-' + id).value;
 
-      var speed = speedFactor * 0.01;
+      var speed = speedFactor * 0.1;
 
       BB8API.path(speed, 'circle');
     });
