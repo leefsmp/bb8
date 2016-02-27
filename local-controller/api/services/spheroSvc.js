@@ -20,10 +20,17 @@ import noble from 'noble';
 import sphero from 'sphero';
 import EventEmitter from 'events';
 
-export default class BB8Svc extends EventEmitter {
+///////////////////////////////////////////////////////////////////
+// SpheroSvc Service: wraps calls to the sphero API
+// Keeps track of detected devices
+// Allows connecting a specific device and send commands to it
+// Handles the logic for the device: blink LED, automated path, ...
+//
+///////////////////////////////////////////////////////////////////
+export default class SpheroSvc extends EventEmitter {
 
   ///////////////////////////////////////////////////////////////////
-  //
+  // Constructor
   //
   ///////////////////////////////////////////////////////////////////
   constructor() {
@@ -34,44 +41,53 @@ export default class BB8Svc extends EventEmitter {
   }
 
   ///////////////////////////////////////////////////////////////////
-  // Scan for local BLE BB8 devices
+  // Scan for local BLE sphero devices
   //
   ///////////////////////////////////////////////////////////////////
-  scan(scanTimeout) {
+  scan(scanTimeout, filters) {
 
     var _thisSvc = this;
 
-    noble.on('discover', function(peripheral) {
+    function _discover(peripheral) {
 
       var deviceId = peripheral.id;
       var address = peripheral.address;
       var name = peripheral.advertisement.localName;
 
-      if(name && name.startsWith('BB-')) {
+      if (name) {
 
-        var blinker = new Blinker(_thisSvc, deviceId);
+        filters.forEach((filter)=> {
 
-        var device = {
-          deviceId: deviceId,
-          connected: false,
-          address: address,
-          name: name,
-          blinker: blinker,
-          pathId: null
-        };
+          if (filter == "*" || name.indexOf(filter) > -1) {
 
-        _thisSvc.emit('DEVICE_DETECTED', device);
+            var blinker = new Blinker(_thisSvc, deviceId);
 
-        _thisSvc.detectedDevices[deviceId] = device;
+            var device = {
+              deviceId: deviceId,
+              connected: false,
+              address: address,
+              name: name,
+              blinker: blinker,
+              pathId: null
+            };
+
+            _thisSvc.emit('DEVICE_DETECTED', device);
+
+            _thisSvc.detectedDevices[deviceId] = device;
+          }
+        });
       }
-    });
+    }
 
-    function _startScan(){
+    function _startScan() {
 
-      noble.startScanning();
+        noble.on('discover', _discover);
+
+        noble.startScanning();
 
       //scan for 30 sec ...
       setTimeout(()=>{
+        noble.removeListener('discover', _discover);
         console.log('Stop scanning');
         noble.stopScanning();
       }, scanTimeout || 30000);
@@ -165,12 +181,12 @@ export default class BB8Svc extends EventEmitter {
 
         driver.connect(()=> {
 
-          console.log('BB8 device connected: ' +
+          console.log('Device connected: ' +
             deviceId);
 
           _onConnect(driver);
 
-          // collision handler
+          //collision handler
           driver.on("collision", (data)=> {
 
             driver.color(0xFF0000);
@@ -420,7 +436,7 @@ export default class BB8Svc extends EventEmitter {
   }
 
   ///////////////////////////////////////////////////////////////////
-  //
+  // Starts moving device based on path function
   //
   ///////////////////////////////////////////////////////////////////
   startPath(deviceId, pathFunc, speed, freq) {
@@ -474,7 +490,7 @@ export default class BB8Svc extends EventEmitter {
   }
 
   ///////////////////////////////////////////////////////////////////
-  //
+  // Stops moving device along path
   //
   ///////////////////////////////////////////////////////////////////
   stopPath(deviceId) {
@@ -506,14 +522,14 @@ export default class BB8Svc extends EventEmitter {
   }
 
   ///////////////////////////////////////////////////////////////////
-  //
+  // Return a square path function
   //
   ///////////////////////////////////////////////////////////////////
   createSquarePathFn(lentgh, speed) {
 
     var squarePathFn = function(t) {
 
-      var state = (Math.floor(speed * 0.1 * t/lentgh) % 4);
+      var state = (Math.floor(speed * 0.01 * t/lentgh) % 4);
 
       return state * 90;
     }

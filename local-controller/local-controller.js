@@ -17,172 +17,277 @@
 /////////////////////////////////////////////////////////////////////
 
 import noble from 'noble';
-import BB8Svc from './services/bb8Svc';
-import ioClient from 'socket.io-client';
-import shutdown from 'shutdown-handler';
+import ServiceManager from './api/services/svcManager';
+import SpheroSvc from './api/services/spheroSvc';
+import SocketSvc from './api/services/socketSvc';
 import config from '../config/prod.config';
+import shutdown from 'shutdown-handler';
+
+import cookieParser from 'cookie-parser';
+import bodyParser from 'body-parser';
+import favicon from 'serve-favicon';
+import express from 'express';
+import path from 'path';
 
 /////////////////////////////////////////////////////////////////////
-// Initialization
+//
 //
 /////////////////////////////////////////////////////////////////////
-var socket = ioClient.connect(
-  `${config.controller.host}:${config.port}`, {
-    reconnect: true
-  });
-
-var bb8Svc = new BB8Svc();
-
-/////////////////////////////////////////////////////////////////////
-// Socket connected
-//
-/////////////////////////////////////////////////////////////////////
-socket.on('connect', ()=> {
-
-  console.log('Local controller connected: ' +
-    config.controller.name);
-
-  shutdown.on('exit', async()=> {
-
-    await bb8Svc.shutdown();
-  });
-});
-
-/////////////////////////////////////////////////////////////////////
-// Type request, controller replies with info
-//
-/////////////////////////////////////////////////////////////////////
-socket.on('IOT_TYPE_REQUEST', (data)=> {
-
-  socket.emit('IOT_TYPE_REPLY', {
-    type: 'IOT_CONTROLLER',
-    name: config.controller.name
-  });
-});
-
-/////////////////////////////////////////////////////////////////////
-// Scan request, controller scans local BLE devices
-//
-/////////////////////////////////////////////////////////////////////
-socket.on('IOT_SCAN_REQUEST', (data)=> {
-
-  console.log('Scanning for devices ...\n');
-
-  bb8Svc.scan(data.scanTimeout);
-});
-
-bb8Svc.on('DEVICE_DETECTED', (device)=>{
-
-  socket.emit('IOT_DEVICE_MSG', {
-    connected: device.connected,
-    deviceId: device.deviceId,
-    address: device.address,
-    name: device.name
-  });
-
-  console.log('Device detected: ');
-  console.log('Name: ' + device.name);
-  console.log('uuid: ' + device.deviceId);
-  console.log('address: ' + device.address);
-  console.log();
-});
-
-/////////////////////////////////////////////////////////////////////
-// Process various IoT command from server
-//
-/////////////////////////////////////////////////////////////////////
-socket.on('IOT_COMMAND', async(cmd) => {
-
-  console.log('IOT_COMMAND received:');
-  console.log(cmd);
+async function initializeSocket(socketSvc) {
 
   try {
 
-    switch(cmd.cmdId) {
+    var socket = await socketSvc.connect(
+      `${config.controller.host}:${config.server.port}`);
 
-      case 'BB8_CONNECTION_REQUEST':
+    console.log('Local controller connected: ' +
+      config.controller.name);
 
-        var device = await bb8Svc.connect(
-          cmd.deviceId);
+    var spheroSvc = new SpheroSvc();
 
-        // notify server of device status change
-        socket.emit('IOT_DEVICE_MSG', {
-          connected: device.connected,
-          deviceId: device.deviceId,
-          address: device.address,
-          name: device.name
-        });
+    ///////////////////////////////////////////////////////////////////
+    // shutdown actions
+    //
+    ///////////////////////////////////////////////////////////////////
+    shutdown.on('exit', async()=>{
 
-        // notify caller
-        socket.emit('IOT_COMMAND_RESULT', {
-          tag: cmd.tag,
-          status: 'device connected'
-        });
+      await spheroSvc.shutdown();
+    });
 
-        break;
+    ///////////////////////////////////////////////////////////////////
+    //
+    //
+    ///////////////////////////////////////////////////////////////////
+    socket.emit('IOT_CLIENT_READY', {
+      type: 'IOT_CONTROLLER',
+      name: config.controller.name
+    });
 
-      case 'ROLL':
+    ///////////////////////////////////////////////////////////////////
+    // Scan request, controller scans local BLE devices
+    //
+    ///////////////////////////////////////////////////////////////////
+    socket.on('IOT_SCAN_REQUEST', (data)=> {
 
-        await bb8Svc.roll(
-          cmd.deviceId,
-          cmd.args.speed,
-          cmd.args.heading);
+      console.log('Scanning for devices ...\n');
 
-        break;
+      var filters = ['BB-', '2B-'];
 
-      case 'HEADING':
+      spheroSvc.scan(data.scanTimeout, filters);
+    });
 
-        await bb8Svc.setHeading(
-          cmd.deviceId,
-          cmd.args.heading);
+    spheroSvc.on('DEVICE_DETECTED', (device)=> {
 
-        break;
+      socket.emit('IOT_DEVICE_MSG', {
+        connected: device.connected,
+        deviceId: device.deviceId,
+        address: device.address,
+        name: device.name
+      });
 
-      case 'BLINK':
+      console.log('Device detected: ');
+      console.log('Name: ' + device.name);
+      console.log('uuid: ' + device.deviceId);
+      console.log('address: ' + device.address);
+      console.log();
+    });
 
-        await bb8Svc.blink(
-          cmd.deviceId,
-          (cmd.args.enabled == 'true' ? true : false),
-          parseInt(cmd.args.period),
-          parseInt("0x" + cmd.args.color));
+    ///////////////////////////////////////////////////////////////////
+    // Process various IoT command from server
+    //
+    ///////////////////////////////////////////////////////////////////
+    socket.on('IOT_COMMAND', async(cmd)=>{
 
-        break;
+      console.log('IOT_COMMAND received:');
+      console.log(cmd);
 
-      case 'PATH':
+      try {
 
-        var pathFn = null;
+        switch (cmd.cmdId) {
 
-        switch(cmd.args.type) {
+          case 'BB8_CONNECTION_REQUEST':
 
-          case 'square':
+            var device = await spheroSvc.connect(
+              cmd.deviceId);
 
-            pathFn = bb8Svc.createSquarePathFn(
-              cmd.args.length,
-              cmd.args.speed);
+            // notify server of device status change
+            socket.emit('IOT_DEVICE_MSG', {
+              connected: device.connected,
+              deviceId: device.deviceId,
+              address: device.address,
+              name: device.name
+            });
+
+            // notify caller
+            socket.emit('IOT_COMMAND_RESULT', {
+              tag: cmd.tag,
+              status: 'device connected'
+            });
+
+            break;
+
+          case 'ROLL':
+
+          await spheroSvc.roll(
+            cmd.deviceId,
+            cmd.args.speed,
+            cmd.args.heading);
+
+            break;
+
+          case 'HEADING':
+
+          await spheroSvc.setHeading(
+            cmd.deviceId,
+            cmd.args.heading);
+
+            break;
+
+          case 'BLINK':
+
+          await spheroSvc.blink(
+            cmd.deviceId,
+            (cmd.args.enabled == 'true' ? true : false),
+            parseInt(cmd.args.period),
+            parseInt("0x" + cmd.args.color));
+
+            break;
+
+          case 'PATH':
+
+            var pathFn = null;
+
+            switch (cmd.args.type) {
+
+              case 'square':
+
+                pathFn = spheroSvc.createSquarePathFn(
+                  cmd.args.length,
+                  cmd.args.speed);
+
+                break;
+            }
+
+            if (pathFn) {
+
+              await spheroSvc.startPath(
+                cmd.deviceId,
+                pathFn,
+                cmd.args.speed,
+                250);
+            }
+            else {
+
+            await spheroSvc.stopPath(
+              cmd.deviceId);
+            }
 
             break;
         }
+      }
+      catch (ex) {
 
-        if(pathFn){
-
-          await bb8Svc.startPath(
-            cmd.deviceId,
-            pathFn,
-            cmd.args.speed,
-            250);
-        }
-        else {
-
-        await bb8Svc.stopPath(
-          cmd.deviceId);
-        }
-
-        break;
-    }
+        console.log(ex);
+      }
+    });
   }
-  catch(ex) {
+  catch(ex){
 
     console.log(ex);
   }
-});
+}
+
+/////////////////////////////////////////////////////////////////////
+//
+//
+/////////////////////////////////////////////////////////////////////
+function initializeRoutes(app, server) {
+
+  return new Promise(async(resolve, reject)=> {
+
+    try {
+
+      var svcManager = new ServiceManager();
+
+      var socketSvc = new SocketSvc(svcManager);
+
+      initializeSocket(socketSvc);
+
+      app.use(express.static(path.resolve(
+        __dirname, 'www')));
+
+      resolve();
+    }
+    catch (ex) {
+
+      reject(ex);
+    }
+  });
+}
+
+/////////////////////////////////////////////////////////////////////
+//
+//
+/////////////////////////////////////////////////////////////////////
+function createServer() {
+
+  return new Promise(async(resolve, reject)=> {
+
+    try {
+
+      var app = express();
+
+      var faviconPath = path.resolve(
+        __dirname, 'www/img/favicon.ico');
+
+      app.use(favicon(faviconPath));
+      app.use(bodyParser.urlencoded({ extended: false }));
+      app.use(bodyParser.json());
+      app.use(cookieParser());
+
+      app.set('port', process.env.PORT || config.controller.port);
+
+      var server = app.listen(app.get('port'), async()=> {
+
+        try {
+
+          await initializeRoutes(app, server);
+
+          resolve(server);
+        }
+        catch (ex) {
+
+          reject(ex);
+        }
+      });
+    }
+    catch (ex){
+
+      reject(ex);
+    }
+  });
+}
+
+/////////////////////////////////////////////////////////////////////
+//
+//
+/////////////////////////////////////////////////////////////////////
+async function runServer() {
+
+  try {
+
+    var server = await createServer();
+
+    console.log('Server listening on: ');
+    console.log(server.address());
+    console.log('ENV: ' + process.env.NODE_ENV);
+  }
+  catch (ex) {
+
+    console.log('Failed to run server... ');
+    console.log(ex);
+  }
+}
+
+runServer();
 

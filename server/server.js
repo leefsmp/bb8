@@ -16,16 +16,16 @@
 // UNINTERRUPTED OR ERROR FREE.
 /////////////////////////////////////////////////////////////////////
 import express from 'express';
-import IoTAPI from './routes/api/IoT';
-import bb8API from './routes/api/bb8';
-import IoTSvc from './services/IoTSvc';
-import config from '../config/prod.config';
+import IoTAPI from './api/endpoints/IoT';
+import bb8API from './api/endpoints/bb8';
+import IoTSvc from './api/services/IoTSvc';
+import config from '../config/dev.config';
 
 var app = express();
 
-app.use(config.host, express.static(__dirname + '/www/'));
+app.use(config.server.host, express.static(__dirname + '/www/'));
 
-app.set('port', process.env.PORT || config.port);
+app.set('port', process.env.PORT || config.server.port);
 
 var server = app.listen(app.get('port'), function() {
 
@@ -36,8 +36,8 @@ var server = app.listen(app.get('port'), function() {
 
     var ioTSvc = new IoTSvc(server);
 
-    app.use(config.host + '/api/iot', IoTAPI(ioTSvc));
-    app.use(config.host + '/api/bb8', bb8API(ioTSvc));
+    app.use(config.server.host + '/api/iot', IoTAPI(ioTSvc));
+    app.use(config.server.host + '/api/bb8', bb8API(ioTSvc));
 
     ioTSvc.on('IOT_CONTROLLER_CONNECTED', (controllerId)=>{
 

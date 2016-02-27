@@ -1,11 +1,35 @@
-
+/////////////////////////////////////////////////////////////////////
+// Copyright (c) Autodesk, Inc. All rights reserved
+// Written by Philippe Leefsma 2016 - ADN/Developer Technical Services
+//
+// Permission to use, copy, modify, and distribute this software in
+// object code form for any purpose and without fee is hereby granted,
+// provided that the above copyright notice appears in all copies and
+// that both that copyright notice and the limited warranty and
+// restricted rights notice below appear in all supporting
+// documentation.
+//
+// AUTODESK PROVIDES THIS PROGRAM "AS IS" AND WITH ALL FAULTS.
+// AUTODESK SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTY OF
+// MERCHANTABILITY OR FITNESS FOR A PARTICULAR USE.  AUTODESK, INC.
+// DOES NOT WARRANT THAT THE OPERATION OF THE PROGRAM WILL BE
+// UNINTERRUPTED OR ERROR FREE.
+/////////////////////////////////////////////////////////////////////
 import io from 'socket.io';
 import EventEmitter from 'events';
 
+/////////////////////////////////////////////////////////////////////
+// IoTSvc Service: uses socket.io to wait for incoming controller
+// connections and keep track of them.
+//
+// Exposes methods to use on the server API to easily interact and
+// send commands to the controllers
+//
+/////////////////////////////////////////////////////////////////////
 class IoTSvc extends EventEmitter {
 
   ///////////////////////////////////////////////////////////////////
-  //
+  // Constructor
   //
   ///////////////////////////////////////////////////////////////////
   constructor(server) {
@@ -51,9 +75,7 @@ class IoTSvc extends EventEmitter {
 
     var _thisSvc = this;
 
-    socket.emit('IOT_TYPE_REQUEST');
-
-    socket.on('IOT_TYPE_REPLY', (data)=> {
+    socket.on('IOT_CLIENT_READY', ()=> {
 
       if(data.type === 'IOT_CONTROLLER'){
 
@@ -223,7 +245,6 @@ class IoTSvc extends EventEmitter {
 
     return deviceList;
   }
-
 }
 
 export default IoTSvc;

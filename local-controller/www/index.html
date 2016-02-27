@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta charset="UTF-8">
+  <title>IoT Local Controller</title>
+</head>
+<body onload="initCam()">
+
+<script src="libs/webcam.js"></script>
+
+<div id="my_camera" style="width:320px; height:240px;"></div>
+<div id="my_result"></div>
+
+<script>
+
+  function initCam(){
+
+    Webcam.set({
+      width: 320,
+      height: 240,
+      dest_width: 320,
+      dest_height: 240,
+      image_format: 'png',
+      force_flash: false,
+      flip_horiz: true,
+      fps: 45
+    });
+
+    Webcam.attach('#my_camera');
+  }
+
+  function take_snapshot() {
+    Webcam.snap(function(imgUri) {
+
+      document.getElementById('my_result').innerHTML = '<img src="' + imgUri + '"/>';
+
+      Webcam.upload(imgUri, '/img', function(code, text) {
+
+      });
+    } );
+  }
+
+</script>
+
+<a href="javascript:void(take_snapshot())">Take Snapshot</a>
+
+</body>
+</html>
