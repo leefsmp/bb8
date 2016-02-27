@@ -75,7 +75,7 @@ class IoTSvc extends EventEmitter {
 
     var _thisSvc = this;
 
-    socket.on('IOT_CLIENT_READY', ()=> {
+    socket.on('IOT_CLIENT_READY', (data)=> {
 
       if(data.type === 'IOT_CONTROLLER'){
 
