@@ -35,7 +35,7 @@
   ],
   "license": "MIT",
   "scripts": {
-    "start": "node ./server/run.js",
+    "start": "node ./server/bin/run.js",
     "controller": "node ./local-controller/run.js"
   },
   "repository": {
